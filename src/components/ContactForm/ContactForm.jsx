@@ -1,5 +1,9 @@
 import { Formik } from 'formik';
 import * as yup from 'yup';
+import { notifyOptions } from 'utils/notify';
+import { toast } from 'react-toastify';
+
+
 import {
   Button,
   ErrorMessage,
@@ -7,6 +11,9 @@ import {
   Form,
   FormField,
 } from './ContactForm.styled';
+import { useDispatch, useSelector } from 'react-redux';
+import { selectContacts } from 'redux/selectors';
+import { addContact } from 'redux/contactsSlice';
 
 const schema = yup.object().shape({
   name: yup
@@ -28,7 +35,31 @@ const schema = yup.object().shape({
 });
 
 const initialValues = { name: '', number: '' };
-export const ContactForm = ({ onAddContact }) => {
+export const ContactForm = () => {
+
+const contacts = useSelector(selectContacts);
+const dispatch = useDispatch();
+
+const isExist = ({ name, number }) => {
+  const normalizedName = name.toLowerCase().trim();
+  const normalizedNumber = number.trim();
+
+  const dublicate = contacts.some(
+    contact =>
+      contact.name.toLowerCase().trim() === normalizedName ||
+      contact.number.trim() === normalizedNumber
+  );
+  return dublicate;
+};
+
+const onAddContact = ({ name, number }) => {
+  if (isExist({ name, number })) {
+    return toast.error(`This contact is already in contacts`, notifyOptions);
+  }
+  const action = addContact({ name, number });
+  dispatch(action);
+};
+
   return (
     <Formik
       initialValues = {initialValues}
